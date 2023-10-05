@@ -1,81 +1,104 @@
 <script setup>
-
-import { onMounted, ref } from 'vue'
-import Pokemons from './components/Pokemons.vue';
-import Pokemon from './components/Pokemon.vue';
+import { onMounted, ref } from "vue";
+import Pokemons from "./components/Pokemons.vue";
+import Pokemon from "./components/Pokemon.vue";
 
 const pokemons = ref([]);
 const resultados = ref([]);
-const buscar = ref('');
+const buscar = ref("");
+const tipoSeleccionado = ref("");
+const tiposPokemon = ref([]);
 
-const filtrar = () => {
-
-    if (buscar.value) {
-        
-        resultados.value = pokemons.value.filter(value => {
-            return value.nombre == buscar.value 
-        })
-
-    }else{
-        resultados.value = pokemons.value
+const cargarTiposPokemon = async () => {
+  try {
+    const response = await fetch("https://pokeapi.co/api/v2/type/");
+    if (!response.ok) {
+      throw new Error("No se pudo cargar la lista de tipos de Pokémon");
     }
+    const data = await response.json();
+    tiposPokemon.value = data.results.map((tipo) => tipo.name);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
-//este metodo se ejecuta cuando se carga el componente
-onMounted(() => {
+const filtrar = () => {
+  if (buscar.value || tipoSeleccionado.value) {
+    resultados.value = pokemons.value.filter((value) => {
+      const porNombre = !buscar.value || value.nombre.includes(buscar.value);
+      const porTipo =
+        !tipoSeleccionado.value ||
+        (value.tipo_pk && value.tipo_pk.includes(tipoSeleccionado.value));
+      return porNombre && porTipo;
+    });
+  } else {
+    resultados.value = pokemons.value;
+  }
+};
 
-    for (let index = 1; index < 51; index++) {
+onMounted(async () => {
+  await cargarTiposPokemon();
 
-        fetch(`https://pokeapi.co/api/v2/pokemon/${index}/`)
-            .then(response => response.json())
-            .then(data => {
-                let object = {
-                    img: data.sprites.other["official-artwork"].front_default,
-                    numero: data.id,
-                    nombre: data.name,
-                    altura: data.height,
-                    peso: data.weight,
-                    tipo_pk: data.types.map((pk) => pk.type.name),
-                    hp: data.stats[0].base_stat,
-                    ataque: data.stats[1].base_stat,
-                    defensa: data.stats[2].base_stat,
-                    ataque_especial: data.stats[3].base_stat,
-                    defensa_especial: data.stats[4].base_stat,
-                    velocidad: data.stats[5].base_stat,
-                }
-
-                pokemons.value.push(object)
-
-            });
-
+  for (let index = 1; index < 51; index++) {
+    try {
+      const response = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/${index}/`
+      );
+      if (!response.ok) {
+        throw new Error(`No se pudo cargar el Pokémon número ${index}`);
+      }
+      const data = await response.json();
+      const object = {
+        img: data.sprites.other["official-artwork"].front_default,
+        numero: data.id,
+        nombre: data.name,
+        altura: data.height,
+        peso: data.weight,
+        tipo_pk: data.types.map((pk) => pk.type.name),
+        hp: data.stats[0].base_stat,
+        ataque: data.stats[1].base_stat,
+        defensa: data.stats[2].base_stat,
+        ataque_especial: data.stats[3].base_stat,
+        defensa_especial: data.stats[4].base_stat,
+        velocidad: data.stats[5].base_stat,
+      };
+      pokemons.value.push(object);
+    } catch (error) {
+      console.error(error);
     }
+  }
 
-    resultados.value = pokemons.value
-
-})
-
-
+  resultados.value = pokemons.value;
+});
 </script>
 
 <template>
-
-    <div class="p-4">
-
-        <div class="flex justify-end space-x-4">
-
-            <input v-model="buscar" type="text" placeholder="Nombre del pokemon" class="rounded-full border py-3 px-6 text-xl w-96">
-
-            <button @click="filtrar()" class="px-10 py-1 bg-green-600 text-white rounded-full">
-                Buscar
-            </button>
-
-        </div>
-        <!-- llamar el emit -->
-
-        <Pokemons :resultados="resultados" :buscar="buscar"  />
-
-        <Pokemon />
-        
+  <div class="p-4">
+    <div class="flex justify-end space-x-4">
+      <input
+        v-model="buscar"
+        type="text"
+        placeholder="Nombre del Pokémon"
+        class="rounded-full border py-3 px-6 text-xl w-96"
+      />
+      <select
+        v-model="tipoSeleccionado"
+        class="rounded-full border py-3 px-6 text-xl"
+      >
+        <option value="">Todos los tipos</option>
+        <option v-for="tipo in tiposPokemon" :value="tipo" :key="tipo">
+          {{ tipo }}
+        </option>
+      </select>
+      <button
+        @click="filtrar"
+        class="px-10 py-1 bg-green-600 text-white rounded-full"
+      >
+        Buscar
+      </button>
     </div>
-
+    <Pokemons :resultados="resultados" :buscar="buscar" />
+    <Pokemon />
+  </div>
 </template>
+  
