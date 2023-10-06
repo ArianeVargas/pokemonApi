@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import Pokemons from "./components/Pokemons.vue";
-import Pokemon from "./components/Pokemon.vue";
 
 const pokemons = ref([]);
 const resultados = ref([]);
@@ -70,20 +69,42 @@ onMounted(async () => {
 
   resultados.value = pokemons.value;
 });
+
+const volverAInicio = () => {
+  resultados.value = pokemons.value; // Restablece los resultados a la lista completa de Pokémon.
+  buscar.value = ""; // Limpia el campo de búsqueda.
+  tipoSeleccionado.value = ""; // Restablece la selección de tipo.
+};
 </script>
 
 <template>
+
+  <div>
+    <!-- Botón de Inicio -->
+    <button @click="volverAInicio" class="px-4 py-2 m-6 bg-blue-500 text-white rounded-full mt-4">
+      Inicio
+    </button>
+  </div>
   <div class="p-4">
-    <div class="flex justify-end space-x-4">
+    <div class="mt-6 flex justify-center">
+      <div class="bg-yellow-400 rounded-2xl w-96">
+        <p class="text-center py-10 text-5xl uppercase text-red-700 font-bold">
+          pokemons
+        </p>
+      </div>
+    </div>
+    <div
+      class="flex flex-col justify-end sm:flex-row px-6 sm:items-center space-y-0 mt-6 sm:space-y-0 sm:space-x-4"
+    >
       <input
         v-model="buscar"
         type="text"
         placeholder="Nombre del Pokémon"
-        class="rounded-full border py-3 px-6 text-xl w-96"
+        class="rounded-full border py-3 px-6 text-xl w-full sm:w-96"
       />
       <select
         v-model="tipoSeleccionado"
-        class="rounded-full border py-3 px-6 text-xl"
+        class="rounded-full border py-3 px-6 text-xl w-full sm:w-auto"
       >
         <option value="">Todos los tipos</option>
         <option v-for="tipo in tiposPokemon" :value="tipo" :key="tipo">
@@ -98,7 +119,6 @@ onMounted(async () => {
       </button>
     </div>
     <Pokemons :resultados="resultados" :buscar="buscar" />
-    <Pokemon />
   </div>
 </template>
   

@@ -1,13 +1,24 @@
 <script setup>
+import { ref, defineProps, defineEmits } from "vue";
+import PokemonModal from "./PokemonModal.vue";
 
-    const props = defineProps(['resultados', 'buscar'])
+const props = defineProps(["resultados"]);
+const { emit } = defineEmits();
 
-    const pokemonSeleccionado = (pokemon) => {
-        emit('set-pokemon', pokemon)
-    };
+const isOpen = ref(false);
+const selectedPokemon = ref(null);
 
-    /* color para los tipos */
-    function getColorClass(tipo) {
+const openPokemonModal = (pokemon) => {
+  selectedPokemon.value = pokemon;
+  isOpen.value = true;
+};
+
+const closeModal = () => {
+  isOpen.value = false;
+};
+
+/* color para los tipos */
+function getColorClass(tipo) {
   switch (tipo) {
     case "fire":
       return "bg-red-500 text-white";
@@ -34,42 +45,41 @@
       return "bg-gray-500 text-white"; // Clase predeterminada en caso de que el tipo no tenga una clase específica
   }
 }
-
 </script>
 
+
 <template>
-    
-    <div class="mt-6 flex justify-center">
-            <div class="bg-yellow-400 rounded-2xl w-96 ">
-                <p class="text-center py-10 text-5xl uppercase text-red-700 font-bold ">pokemons</p>
-
-            </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 text-lg mt-10">
+    <div
+      v-for="pokemon in resultados"
+      :key="pokemon.numero"
+      @click="openPokemonModal(pokemon)"
+      class="cursor-pointer"
+    >
+      <div
+        class="border p-4 rounded shadow hover:shadow-lg transition duration-300"
+      >
+        <img :src="pokemon.img" alt="Pokemon Image" class="mx-auto" />
+        <h2 class="text-center font-semibold text-lg">{{ pokemon.nombre }}</h2>
+        <!-- Muestra el tipo_pk con colores -->
+        <div class="flex justify-center space-x-2 mt-2">
+          <span
+            v-for="(tipo, index) in pokemon.tipo_pk"
+            :key="index"
+            :class="getColorClass(tipo)"
+            class="rounded bg-blue-500 text-white px-2"
+          >
+            {{ tipo }}
+          </span>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <ul class="grid grid-cols-6 gap-4 text-lg mt-10">
-            <li v-for="item in props.resultados" :key="item.numero" @click="pokemonSeleccionado(item)" class="border rounded-xl p-10 shadow cursor-pointer">
-                <div>
-                    <img :src="item.img">
-                </div>
-                <h1 class="text-center font-semibold">
-                    ID: {{ item.numero }}
-                </h1>
-                <h1 class="text-center font-semibold">
-                    {{ item.nombre }}
-                </h1>
-                <ul class="flex justify-center space-x-2 mt-2">
-                    <li v-for="(tipo, index) in item.tipo_pk" :key="index" :class="getColorClass(tipo)" class="rounded bg-blue-500 text-white px-2">
-                        {{ tipo }}
-                    </li>
-                </ul>
-            </li>
-
-            <li v-if="resultados.length == 0">    
-                <span class="text-red-600">
-                    El pokemon {{ buscar.value }} no existe
-                </span>
-            </li>
-
-        </ul>
-
+  <!-- Display the modal when isOpen is true -->
+  <PokemonModal
+    v-if="isOpen"
+    :pokemon="selectedPokemon"
+    @close-modal="closeModal"
+  />
 </template>
