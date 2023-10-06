@@ -1,0 +1,6 @@
+# Set the default behavior to LF for all files
+* text=auto
+
+# Explicitly specify files or patterns
+*.js text eol=lf
+*.css text eol=lf
